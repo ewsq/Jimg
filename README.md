@@ -2,7 +2,7 @@
 
 ### Jimg使用框架：
 
-![Jimg使用框架](./doc/1.png)
+![Jimg使用框架](https://raw.githubusercontent.com/ewsq/Jimg/master/doc/1.png)
 
 
 
