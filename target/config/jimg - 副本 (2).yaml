@@ -1,0 +1,14 @@
+alpha:
+  listen: 8888
+  hash: fnv1a_64
+  distribution: ketama
+  auto_eject_hosts: true
+  protocol: ssdb  #可以取值redis,memcache,ssdb
+  preconnect: true
+  server_retry_timeout: 5000
+  server_failure_limit: 1
+  servers:
+    - 10.239.204.34:15272:1:4500 10.239.204.34:15273:0:4500
+    - 10.239.204.34:15274:1:4500 10.239.204.34:15275:0:4500
+    - 10.239.204.34:15276:1:4500 10.239.204.34:15277:0:4500
+    - 10.239.204.34:15278:0:4500 10.239.204.34:15279:0:4500

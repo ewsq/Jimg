@@ -1,0 +1,31 @@
+#!/bin/sh
+
+BASEPATH=/u01/Jimg
+cd $BASEPATH
+
+case "$1" in
+
+  start)
+    nohup java -Xms512M -Xmx512M -XX:-UseGCOverheadLimit -jar $BASEPATH/Jimg.jar 2>&1 | /usr/sbin/cronolog ./logs/nohup_%Y%m%d.log &
+    echo $[$!-1] > $BASEPATH/pid
+    ;;
+
+  stop)
+    kill `cat $BASEPATH/pid`
+    rm -rf $BASEPATH/pid
+    ;;
+
+  restart)
+    $0 stop
+    sleep 1
+    $0 start
+    ;;
+
+  *)
+    echo "Usage: reind {start|stop|restart}"
+    ;;
+
+esac
+
+exit 0
+
