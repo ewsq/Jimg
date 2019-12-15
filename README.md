@@ -2,7 +2,7 @@
 
 ### Jimg使用框架：
 
-![Jimg使用框架](./doc/框架.png)
+![Jimg使用框架](./doc/1.png)
 
 
 
