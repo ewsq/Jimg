@@ -10,7 +10,7 @@ Jimg是受zimg启发开发的，zimg非常好，但发现几个问题没有弄�
 
 ### zimg使用框架：
 
-![](./doc/正式部署的图片服务器的架构图.png)
+![](https://raw.githubusercontent.com/ewsq/Jimg/master/doc/正式部署的图片服务器的架构图.png)
 
 zimg没有明白的地方：
 
@@ -202,7 +202,7 @@ service ssdb start
 
 ### 三、安装jimg
 
-![](./doc/安装启动.png)
+![](https://raw.githubusercontent.com/ewsq/Jimg/master/doc/安装启动.png)
 
 
 
@@ -233,7 +233,7 @@ alpha:
     - 1 192.168.10.214:8888:4500 192.168.10.214:8889:4500 192.168.10.214:8889:4501
 ```
 
-![](./doc/配置文件说明.png)
+![](https://raw.githubusercontent.com/ewsq/Jimg/master/doc/配置文件说明.png)
 
 
 
