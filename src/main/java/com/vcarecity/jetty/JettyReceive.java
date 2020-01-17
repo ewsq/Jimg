@@ -23,33 +23,23 @@ public class JettyReceive extends AbstractHandler {
     LinkedList<FileMeta> files = new LinkedList<FileMeta>();
     public static int socketTimeout=2500000;
     public static int connectionTimeout=5000000;
-    private static final MultipartConfigElement MULTI_PART_CONFIG = new MultipartConfigElement("c:/temp");
+    private static MultipartConfigElement MULTI_PART_CONFIG = new MultipartConfigElement("c:/temp");
     public static String JimgUrl = "http://192.168.10.80:48691/";
     public static String JimgShareUrl = "http://192.168.10.80:48691/";
     public static String tmpPath = "/var/logs/tmp";
 
     public JettyReceive(){
-        InputStream is = null;
-        Properties properties = new Properties();
         try {
-            is = new FileInputStream("config/Jimg.properties");
-            properties.load(is);
-            JimgUrl = properties.getProperty("JimgUrl", "http://192.168.10.80:4869/");
+            JimgUrl = YamlUtils.getValue("alpha.JimgUrl");
             System.err.println("JimgUrl:"+JimgUrl);
-            JimgShareUrl = properties.getProperty("JimgShareUrl", "http://192.168.10.80:4869/");
+            JimgShareUrl = YamlUtils.getValue("alpha.JimgShareUrl");
             System.err.println("JimgShareUrl:"+JimgShareUrl);
-            tmpPath = properties.getProperty("tmpPath", "/var/logs/tmp");
+            tmpPath = YamlUtils.getValue("alpha.tmpPath");
             System.err.println("tmpPath:"+tmpPath);
-        } catch (IOException ex) {
-            System.err.println("不能读取配置文件.请确保Jimg.properties在CLASSPATH指定的路径中");
+            MULTI_PART_CONFIG = new MultipartConfigElement(tmpPath);
+        } catch (Exception ex) {
+
         }finally{
-            try {
-                if(is!=null){
-                    is.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -72,9 +62,7 @@ public class JettyReceive extends AbstractHandler {
             if(url!=null && url.length()>2 && url.indexOf("favicon.ico")<1 && url.indexOf("upload")<0 ){
                 key=url.substring(1);
                 System.out.println("key:"+key);
-
                 byte[] byteArray= ssdb.get(key);
-
                 if(byteArray!=null) {
                     response.setStatus(200);
                     response.setContentType("image/jpeg");
@@ -94,7 +82,16 @@ public class JettyReceive extends AbstractHandler {
                 String md5=ssdb.set(fileBody);
                 System.out.println("md5:"+md5);
                 String imgUrl=JimgUrl+md5;
-                String reBody="{\"ret\":true,\"info\":{\"md5\":\""+md5+"\",\"size\":"+fileBody.length+"}}";
+
+                JSONObject reBody=new JSONObject();
+                reBody.put("ret",true);
+                JSONObject info=new JSONObject();
+                info.put("md5",md5);
+                info.put("size",fileBody.length);
+                info.put("JimgUrl",JimgUrl+md5);
+                info.put("JimgShareUrl",JimgShareUrl+md5);
+                reBody.put("info",info);
+
                 System.out.println("reBody:"+reBody);
                 byte[] reByte=reBody.toString().getBytes("UTF-8");
                 response.setStatus(200);
@@ -416,4 +413,7 @@ public class JettyReceive extends AbstractHandler {
         return ip;
     }
 
+    public void destroy() {
+        ssdb.release();
+    }
 }

@@ -55,7 +55,7 @@ public class SSDBClientTest {
 
     @Test
     public void Test03(){
-        try {
+        /*try {
             sock = new Socket("192.168.10.104", 60000);
             while (true) {
                 //System.out.println("匿名内部类创建线程方式1...");
@@ -70,6 +70,6 @@ public class SSDBClientTest {
             }
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }*/
     }
 }

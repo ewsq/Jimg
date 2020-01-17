@@ -8,6 +8,21 @@ public class Cluster {
     private SSDB master;
     private ConcurrentHashMap<String, SSDB> slaver;
 
+    public Cluster(){
+    }
+
+    public Cluster(String id){
+        this.id=id;
+    }
+    public Cluster(String id,SSDB master){
+        this.id=id;
+        this.master=master;
+    }
+    public Cluster(String id,SSDB master,ConcurrentHashMap<String, SSDB> slaver){
+        this.id=id;
+        this.master=master;
+        this.slaver=slaver;
+    }
     public String getId() {
         return id;
     }

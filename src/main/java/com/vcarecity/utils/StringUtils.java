@@ -293,7 +293,7 @@ public class StringUtils {
     /**
      * 截取源字节数组中，指定头index与尾index的子字节数组
      *
-     * @param sourceByte需要截取的数组
+     * @param sourceByte 需要截取的数组
      * @param beginIndex
      *            起始位置
      * @param endIndex
@@ -333,7 +333,7 @@ public class StringUtils {
 
     /**
      * 截取源字符串中，指定头index与尾index的子串，类似于substring,但这里以字节截取
-     * @param sourcestr需要截取的中英文混合字符串
+     * @param sourcestr 需要截取的中英文混合字符串
      * @param beginIndex
      *            起始位置
      * @param endIndex
@@ -351,7 +351,7 @@ public class StringUtils {
 
     /**
      * 截取源字符串中，指定头index与尾index的子串，并按指定长度返回,类似于substring,但这里以字节截取
-     * @param sourcestr需要截取的中英文混合字符串
+     * @param sourcestr 需要截取的中英文混合字符串
      * @param beginIndex
      *            起始位置
      * @param endIndex
@@ -5413,7 +5413,7 @@ public class StringUtils {
 	/**
 	 * 将字符串数组转成以逗号分隔的字符串 ,静态方法
 	 * 
-	 * @param Arr数组
+	 * @param Arr 数组
 	 * @return 内容字串，如果出现错误，返回 空字符串
 	 */
 	public static String arrayToString(String[] Arr) {
@@ -5879,7 +5879,7 @@ public class StringUtils {
 	 * @Type : FilterStr
 	 * @date : 2014年3月12日 下午7:23:03
 	 * @Description : 过滤出数字
-	 * @param str
+	 * @param number
 	 * @return
 	 */
 	public static String filterNumber(String number) {
@@ -6005,9 +6005,9 @@ public class StringUtils {
 		}
 		matcher[2]=String.valueOf(count);
 		return matcher;
-	}	
-	
-	
+	}
+
+
 	public static void main(String[] args) {
 		
 	}

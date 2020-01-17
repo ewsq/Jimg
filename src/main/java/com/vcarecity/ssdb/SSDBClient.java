@@ -330,15 +330,53 @@ public class SSDBClient {
         del(key.getBytes());
     }
 
+    public byte[] ergodic(String key) throws Exception{
+        return ergodic(key.getBytes());
+    }
     /***
-     *
+     * 遍历性的获取对象，主要解决key不带集群ID的情况
+     *根据传入的不带集群ID的KEY，进行对象查找，如果Master失效，则找Slaver（找所有集群的所有Master和Slaver,找到为止）
+     * @param key
+     * @return null if not found
+     * @throws Exception
+     */
+    public byte[] ergodic(byte[] key) throws Exception{
+        String str = new String(key);
+        byte[] bt=null;
+        for(Map.Entry<String, Cluster> entry: readableCluster.entrySet()) {
+            //System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
+            Cluster cluster=entry.getValue();
+            SSDB ssdb=cluster.getMaster();
+            if(ssdb.isOpen()){
+                bt=ssdb.get(key);
+            }else{
+                ConcurrentHashMap<String, SSDB> readableSlaver=cluster.getSlaver();
+                for(Map.Entry<String, SSDB> ent: readableSlaver.entrySet()) {
+                    ssdb=ent.getValue();
+                    if(ssdb.isOpen()) {
+                        bt=ssdb.get(key);
+                    }
+                    if(bt!=null){
+                        break;
+                    }
+                }
+            }
+            if(bt!=null){
+                break;
+            }
+        }
+        return bt;
+    }
+    /***
+     * 均衡性的获取对象
+     *根据传入的带集群ID的KEY，进行对象查找，如果Master失效，则找Slaver
      * @param key
      * @return null if not found
      * @throws Exception
      */
     public byte[] get(byte[] key) throws Exception{
         String str = new String(key);
-        String db=str.substring(0,4);
+        String db=str.substring(0,4);//得到集群编号
         int id=Integer.parseInt(db);
         Cluster cluster=readableCluster.get(String.valueOf(id));
         SSDB ssdb=cluster.getMaster();
@@ -351,7 +389,7 @@ public class SSDBClient {
             if(ssdb.isOpen()) {
                 bt=ssdb.get(key);
             }else{
-                bt=get(key);//如果主和随机选择的复都没有打开，则重新随机选择一个
+                bt=get(key);//如果主和随机选择的副都没有打开，则重新随机选择一个
             }
         }
         return bt;
@@ -364,7 +402,16 @@ public class SSDBClient {
      * @throws Exception
      */
     public byte[] get(String key) throws Exception{
-        return get(key.getBytes());
+        byte[] byteArray=null;
+        String db=key.substring(0,4);//得到集群编号
+        if(key.length()>32 && StringUtils.isAllNumeric(db)) {
+            //正常集群使用
+            byteArray = get(key.getBytes());
+        }else {
+            //解决原有的没有带集群ID的情况
+            byteArray = ergodic(key.getBytes());
+        }
+        return byteArray;
     }
 
     /**
@@ -423,7 +470,7 @@ public class SSDBClient {
             if(ssdb.isOpen()) {
                 bt=ssdb.get(key);
             }else{
-                bt=get(key);//如果主和随机选择的复都没有打开，则重新随机选择一个
+                bt=get(key);//如果主和随机选择的副都没有打开，则重新随机选择一个
             }
         }
         return bt;
@@ -448,7 +495,7 @@ public class SSDBClient {
             if(ssdb.isOpen()) {
                 bt=ssdb.get(key);
             }else{
-                bt=get(key);//如果主和随机选择的复都没有打开，则重新随机选择一个
+                bt=get(key);//如果主和随机选择的副都没有打开，则重新随机选择一个
             }
         }
         return bt;
@@ -487,6 +534,24 @@ public class SSDBClient {
             bl=true;
         }
         return bl;
+    }
+
+    public void destroy() {
+        release(readableCluster);
+        release(writableCluster);
+    }
+
+    public void release(){
+        release(readableCluster);
+        release(writableCluster);
+    }
+    private void release(ConcurrentHashMap<String, Cluster> clusters){
+        for(Map.Entry<String, Cluster> entry : clusters.entrySet()){
+            String mapKey = entry.getKey();
+            Cluster cluster = entry.getValue();
+            cluster.release();
+            clusters.remove(mapKey);
+        }
     }
 
     public static void main(String[] args) {
