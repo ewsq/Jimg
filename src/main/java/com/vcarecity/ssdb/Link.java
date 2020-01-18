@@ -19,7 +19,7 @@ public class Link {
 
 	public static void main(String[] args) {
 		try {
-			Link link=new Link("103.239.204.34",15272);
+			Link link=new Link("10.239.204.34",15272);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

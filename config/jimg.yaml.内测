@@ -1,0 +1,17 @@
+alpha:
+  listen: 88
+  JimgUrl: http://127.0.0.1:88/
+  JimgShareUrl: http://127.0.0.1:88/
+  tmpPath: /var/logs/tmp
+  hash: fnv1a_64
+  distribution: ketama
+  auto_eject_hosts: true
+  protocol: ssdb  #可以取值redis,memcache,ssdb
+  preconnect: true
+  server_retry_timeout: 5000
+  server_failure_limit: 1
+  servers:
+    - 0 192.168.10.211:8888:4500 192.168.10.211:8889:4500 192.168.10.211:8889:4501
+    - 1 192.168.10.212:8888:4500 192.168.10.212:8889:4500 192.168.10.212:8889:4501
+    - 1 192.168.10.213:8888:4500 192.168.10.213:8889:4500 192.168.10.213:8889:4501
+    - 1 192.168.10.214:8888:4500 192.168.10.214:8889:4500 192.168.10.214:8889:4501

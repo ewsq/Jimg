@@ -24,7 +24,7 @@ public class LinkTest {
 		try {
 			new Thread() {
 				int count = 0;
-				Link link=new Link("103.239.204.34",15272);
+				Link link=new Link("10.239.204.34",15272);
 				public void run() {
 					while (true) {
 						count++;
@@ -48,7 +48,7 @@ public class LinkTest {
 	@Test
 	public void Test02(){
 		try {
-			Link link=new Link("103.239.204.34",15272);
+			Link link=new Link("10.239.204.34",15272);
 			new Thread() {
 				int count = 0;
 				public void run() {
