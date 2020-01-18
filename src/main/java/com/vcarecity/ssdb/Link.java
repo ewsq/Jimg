@@ -19,7 +19,7 @@ public class Link {
 
 	public static void main(String[] args) {
 		try {
-			new Link("192.168.10.211",8889);
+			Link link=new Link("103.239.204.34",15272);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -54,14 +54,20 @@ public class Link {
 	 */
 	public Boolean isServerClose(Socket socket){
 		try{
-			socket.sendUrgentData(0xFF);//发送1个字节的紧急数据，默认情况下，服务器端没有开启紧急数据处理，不影响正常通信
+			request("info", "");
 			return false;
 		}catch(Exception se){
 			return true;
 		}
 	}
 
-	public Link(String host, int port, int timeout_ms) throws Exception{
+	public Link(String host, int port, int timeout_ms) throws Exception{/*
+		sock = new Socket(host, port);
+		if(timeout_ms > 0){
+			sock.setSoTimeout(timeout_ms);
+		}
+		sock.setTcpNoDelay(true);
+		closed=false;*/
 		//方式1：相当于继承了Thread类，作为子类重写run()实现
 		new Thread() {
 			int count=0;
@@ -93,7 +99,7 @@ public class Link {
 								closed=true;
 							}
 						}
-						Thread.sleep(100);
+						Thread.sleep(100000);
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
@@ -186,9 +192,21 @@ public class Link {
 			closed=true;
 			throw new Exception(e.getMessage());
 		}
-
 	}
-	
+
+	public void testRead(byte[] data) throws Exception{
+		input.write(data, 0, data.length);
+		System.out.println("<< " +input.repr());
+
+		List<byte[]> ret = parse();
+		if(ret != null){
+			System.out.println("---------------------");
+			for (byte[] bs : ret) {
+				System.out.println(String.format("%-15s", MemoryStream.repr(bs)));
+			}
+		}
+	}
+
 	private List<byte[]> parse() throws Exception{
 		ArrayList<byte[]> list = new ArrayList<byte[]>();
 		
