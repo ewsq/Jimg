@@ -61,15 +61,15 @@ public class Link {
 		}
 	}
 
-	public Link(String host, int port, int timeout_ms) throws Exception{/*
+	public Link(String host, int port, int timeout_ms) throws Exception{
 		sock = new Socket(host, port);
 		if(timeout_ms > 0){
 			sock.setSoTimeout(timeout_ms);
 		}
 		sock.setTcpNoDelay(true);
-		closed=false;*/
+		closed=false;
 		//方式1：相当于继承了Thread类，作为子类重写run()实现
-		new Thread() {
+		/*new Thread() {
 			int count=0;
 			public void run() {
 				while (check) {
@@ -105,7 +105,7 @@ public class Link {
 					}
 				}
 			};
-		}.start();
+		}.start();*/
 
 		//方式2:实现Runnable,Runnable作为匿名内部类
 		/*new Thread(new Runnable() {
@@ -215,7 +215,8 @@ public class Link {
 		while(idx < input.size && (input.chatAt(idx) == '\r' || input.chatAt(idx) == '\n')){
 			idx ++;
 		}
-		
+		System.out.println("idx:"+idx);
+
 		while(idx < input.size){
 			int data_idx = input.memchr('\n', idx);
 			if(data_idx == -1){

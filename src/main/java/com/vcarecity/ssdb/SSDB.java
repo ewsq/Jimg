@@ -61,11 +61,6 @@ public class SSDB{
 		return link.isClosed();
 	}
 
-	public boolean isOpen() {
-		return isConnected() && !isClosed();
-	}
-
-
 	public Response request(String cmd, byte[]...params) throws Exception{
 		return link.request(cmd, params);
 	}

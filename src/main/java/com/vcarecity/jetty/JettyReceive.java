@@ -21,12 +21,12 @@ public class JettyReceive extends AbstractHandler {
     Logger log = Logger.getLogger();
     SSDBClient ssdb=new SSDBClient();
     LinkedList<FileMeta> files = new LinkedList<FileMeta>();
-    public static int socketTimeout=2500000;
-    public static int connectionTimeout=5000000;
-    private static MultipartConfigElement MULTI_PART_CONFIG = new MultipartConfigElement("c:/temp");
-    public static String JimgUrl = "http://192.168.10.80:48691/";
-    public static String JimgShareUrl = "http://192.168.10.80:48691/";
-    public static String tmpPath = "/var/logs/tmp";
+    public int socketTimeout=2500000;
+    public int connectionTimeout=5000000;
+    public String tmpPath = "/var/logs/tmp";
+    private MultipartConfigElement MULTI_PART_CONFIG = null;
+    public String JimgUrl = "http://192.168.10.80:48691/";
+    public String JimgShareUrl = "http://192.168.10.80:48691/";
 
     public JettyReceive(){
         try {
