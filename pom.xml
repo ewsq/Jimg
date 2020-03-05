@@ -86,7 +86,7 @@
 
     <properties>
         <mqtt.version>1.2.1</mqtt.version>
-        <jackson.version>2.9.10.1</jackson.version>
+        <jackson.version>2.9.10.3</jackson.version>
         <httpclient.version>4.5.9</httpclient.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
