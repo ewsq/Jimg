@@ -1,9 +1,6 @@
 package com.vcarecity.ssdb;
 
-import com.vcarecity.utils.Logger;
-import com.vcarecity.utils.MD5Util;
-import com.vcarecity.utils.StringUtils;
-import com.vcarecity.utils.YamlUtils;
+import com.vcarecity.utils.*;
 import redis.clients.jedis.Protocol;
 
 import java.io.File;
@@ -119,7 +116,7 @@ public class SSDBClient {
         }
         if(!oldMaster.equals(newMaster)){
             mycluster.getMaster().release();
-            mycluster.setMaster(addSsdb(clusterid,newMaster,writable));
+            mycluster.setMaster(getSsdb(clusterid,newMaster,writable));
         }
 
         //处理集群中的从节点
@@ -128,7 +125,7 @@ public class SSDBClient {
         for(int i=2;i<newHosts.length;i++) {
             String slaver = newHosts[i];
             if(!oldSlavers.containsKey(slaver)){
-                readableSlaver.put(slaver, addSsdb(clusterid,slaver,false));
+                readableSlaver.put(slaver, getSsdb(clusterid,slaver,false));
             }
         }
         //如果老的slaver组有，而新的slaver组没有则删除
@@ -166,22 +163,30 @@ public class SSDBClient {
      * @param writable
      * @return
      */
-    private SSDB addSsdb(String clusterid,String master,boolean writable) {
+    private SSDB getSsdb(String clusterid,String master,boolean writable) {
         SSDB ssdb = null;
         //处理 Master 开始
         //192.168.50.47:8888:4500  SSDB所在服务器地址:端口号:是否可写:超时时间
+        System.out.println("master:"+master);
         String[] master_host_port_time = master.trim().split(":");
+        System.out.println("master_host_port_time:"+master_host_port_time.toString());
         String host = master_host_port_time[0];
+        System.out.println("host:"+host);
         if(StringUtils.isBlank(host)) {
             return ssdb;
         }
         //设置端口；默认端口8888
         int port = getIntValue(master_host_port_time[1], Protocol.DEFAULT_PORT);
+        System.out.println("port:"+port);
         //设置超时，默认4500毫秒
         int timeout = getIntValue(master_host_port_time[2], Protocol.DEFAULT_TIMEOUT);
+        System.out.println("timeout:"+timeout);
         try {
             ssdb = new SSDB(master,host, port,writable,timeout);
-        } catch (Exception e) {}
+            System.out.println("new SSDB:"+ssdb);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         //处理 Master 结束
         return ssdb;
     }
@@ -208,7 +213,7 @@ public class SSDBClient {
 
         //处理 Master 开始
         String master=hosts[1];
-        myCluster.setMaster(addSsdb(clusterid,master,writable));
+        myCluster.setMaster(getSsdb(clusterid,master,writable));
         //处理 Master 结束
 
         if(hosts.length<3){
@@ -219,7 +224,15 @@ public class SSDBClient {
         //192.168.50.47:8889:1:4500  SSDB所在服务器地址:端口号:是否可写:超时时间
         for(int i=2;i<hosts.length;i++) {
             String slaver = hosts[i];
-            readableSlaver.put(slaver, addSsdb(clusterid,slaver,false));
+            System.out.println("slaver:"+slaver);
+            System.out.println("readableSlaver:"+readableSlaver);
+            SSDB ssdb = getSsdb(clusterid,slaver,false);
+            System.out.println("ssdb:"+ssdb);
+            if(ssdb!=null) {
+                readableSlaver.put(slaver, ssdb);
+            }else{
+                System.out.println(slaver+" 无法连接，请检查配置文件是否正确或者ssdb服务是否正确开启!");
+            }
         }
         myCluster.setSlaver(readableSlaver);
         //处理 Slaver 结束
@@ -343,8 +356,9 @@ public class SSDBClient {
     public byte[] ergodic(byte[] key) throws Exception{
         String str = new String(key);
         byte[] bt=null;
+        System.out.println("readableCluster.size():"+readableCluster.size());
         for(Map.Entry<String, Cluster> entry: readableCluster.entrySet()) {
-            //System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
+            System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
             Cluster cluster=entry.getValue();
             SSDB ssdb=cluster.getMaster();
             if(ssdb.isConnected()){
@@ -365,6 +379,8 @@ public class SSDBClient {
                 break;
             }
         }
+        //System.out.println("key:"+str);
+        //System.out.println("hex:"+ HexUtil.byte2hex(bt));
         return bt;
     }
     /***
