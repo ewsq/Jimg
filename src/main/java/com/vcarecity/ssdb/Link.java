@@ -212,6 +212,7 @@ public class Link {
 		
 		int idx = 0;
 		// ignore leading empty lines
+		// 找出前面的空行，所在位置
 		while(idx < input.size && (input.chatAt(idx) == '\r' || input.chatAt(idx) == '\n')){
 			idx ++;
 		}
