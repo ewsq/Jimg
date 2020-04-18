@@ -28,16 +28,17 @@ public class JimgClient {
         //JimgResult ret0 =Jimg.deleteImg("ea4a74467e81967ed9773467a81db88a");
         //System.out.println(ret0.isRet() + "\r\n" + ret0.getError().getMessage());
 
-        new Thread(new Runnable() {
-            public void run() {
-                JimgResult ret0=null;
-                System.out.println("匿名内部类创建线程方式2...");
-                while (true) {
-                    try {
-                        // 从文件上传图片
-                        ret0 = Jimg.uploadImg("F:\\test\\1.png");
-                        System.out.println("ret0:"+ret0);
-                        System.out.println(ret0.isRet() + "\r\n" + ret0.getImageUrl());
+        for(int i=0;i<5;i++) {
+            new Thread(new Runnable() {
+                public void run() {
+                    JimgResult ret0 = null;
+                    System.out.println("匿名内部类创建线程方式2...");
+                    while (true) {
+                        try {
+                            // 从文件上传图片
+                            ret0 = Jimg.uploadImg("F:\\test\\01.jpg");
+                            System.out.println("ret0:" + ret0);
+                            System.out.println(ret0.isRet() + "\r\n" + ret0.getImageUrl());
 
 /*                        // 从文件上传图片
                         ret0 = Jimg.uploadImg("H:\\照片\\test\\1 (12).JPG");
@@ -48,13 +49,14 @@ public class JimgClient {
                         JimgResult ret = Jimg.uploadImgFromUrl("https://zkres1.myzaker.com/img_upload/cms/article_img/ckeditor/up_ckeditor_14839571963218.jpg");
                         System.out.println(ret.isRet() + "\r\n" + ret.getImageUrl());*/
 
-                        Thread.sleep(1000);
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                            Thread.sleep(1000);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-            }
-        }).start();
+            }).start();
+        }
 
         // Send("http://192.168.1.221:4869/upload",
         // "c:/4c422e03jw1ejoqm5ghm0j20nl0fb76x.jpg", "jpg");
@@ -78,7 +80,7 @@ public class JimgClient {
         InputStream is = null;
         Properties properties = new Properties();
         try {
-            is = new FileInputStream("config/Jimg.properties");
+            is = new FileInputStream("config/JimgClient.properties");
             properties.load(is);
             JimgUrl = properties.getProperty("JimgUrl", "http://192.168.10.80:4869/");
             System.err.println("JimgUrl:"+JimgUrl);
