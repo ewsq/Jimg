@@ -1,9 +1,6 @@
 package com.vcarecity.ssdb;
 
-import com.vcarecity.utils.Logger;
-import com.vcarecity.utils.MD5Util;
-import com.vcarecity.utils.StringUtils;
-import com.vcarecity.utils.YamlUtils;
+import com.vcarecity.utils.*;
 import redis.clients.jedis.Protocol;
 
 import java.io.File;
@@ -13,7 +10,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SSDBClient {
     ConcurrentHashMap<String, String> oldClusters=new ConcurrentHashMap<String,String>();
+    //可读集群
     ConcurrentHashMap<String, Cluster> readableCluster=new ConcurrentHashMap<String,Cluster>();
+    //可写集群
     ConcurrentHashMap<String, Cluster> writableCluster=new ConcurrentHashMap<String,Cluster>();
 
     Logger logger = null; // 公共日志类log4j，所以异常日志记录必须由这个类完成
@@ -119,7 +118,7 @@ public class SSDBClient {
         }
         if(!oldMaster.equals(newMaster)){
             mycluster.getMaster().release();
-            mycluster.setMaster(addSsdb(clusterid,newMaster,writable));
+            mycluster.setMaster(getSsdb(clusterid,newMaster,writable));
         }
 
         //处理集群中的从节点
@@ -128,7 +127,7 @@ public class SSDBClient {
         for(int i=2;i<newHosts.length;i++) {
             String slaver = newHosts[i];
             if(!oldSlavers.containsKey(slaver)){
-                readableSlaver.put(slaver, addSsdb(clusterid,slaver,false));
+                readableSlaver.put(slaver, getSsdb(clusterid,slaver,false));
             }
         }
         //如果老的slaver组有，而新的slaver组没有则删除
@@ -166,22 +165,30 @@ public class SSDBClient {
      * @param writable
      * @return
      */
-    private SSDB addSsdb(String clusterid,String master,boolean writable) {
+    private SSDB getSsdb(String clusterid,String master,boolean writable) {
         SSDB ssdb = null;
         //处理 Master 开始
         //192.168.50.47:8888:4500  SSDB所在服务器地址:端口号:是否可写:超时时间
+        System.out.println("master:"+master);
         String[] master_host_port_time = master.trim().split(":");
+        System.out.println("master_host_port_time:"+master_host_port_time.toString());
         String host = master_host_port_time[0];
+        System.out.println("host:"+host);
         if(StringUtils.isBlank(host)) {
             return ssdb;
         }
         //设置端口；默认端口8888
         int port = getIntValue(master_host_port_time[1], Protocol.DEFAULT_PORT);
+        System.out.println("port:"+port);
         //设置超时，默认4500毫秒
         int timeout = getIntValue(master_host_port_time[2], Protocol.DEFAULT_TIMEOUT);
+        System.out.println("timeout:"+timeout);
         try {
             ssdb = new SSDB(master,host, port,writable,timeout);
-        } catch (Exception e) {}
+            System.out.println("new SSDB:"+ssdb);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         //处理 Master 结束
         return ssdb;
     }
@@ -208,7 +215,7 @@ public class SSDBClient {
 
         //处理 Master 开始
         String master=hosts[1];
-        myCluster.setMaster(addSsdb(clusterid,master,writable));
+        myCluster.setMaster(getSsdb(clusterid,master,writable));
         //处理 Master 结束
 
         if(hosts.length<3){
@@ -219,7 +226,15 @@ public class SSDBClient {
         //192.168.50.47:8889:1:4500  SSDB所在服务器地址:端口号:是否可写:超时时间
         for(int i=2;i<hosts.length;i++) {
             String slaver = hosts[i];
-            readableSlaver.put(slaver, addSsdb(clusterid,slaver,false));
+            System.out.println("slaver:"+slaver);
+            System.out.println("readableSlaver:"+readableSlaver);
+            SSDB ssdb = getSsdb(clusterid,slaver,false);
+            System.out.println("ssdb:"+ssdb);
+            if(ssdb!=null) {
+                readableSlaver.put(slaver, ssdb);
+            }else{
+                System.out.println(slaver+" 无法连接，请检查配置文件是否正确或者ssdb服务是否正确开启!");
+            }
         }
         myCluster.setSlaver(readableSlaver);
         //处理 Slaver 结束
@@ -302,13 +317,15 @@ public class SSDBClient {
         SSDB ssdb=cluster.getMaster();
         //System.out.println("set cluster.id:"+cluster.getId());
         String key=StringUtils.leftAppendZero(cluster.getId(),4)+ MD5Util.getMD5String(val);
+        boolean isConnected=ssdb.isConnected();
         System.out.println("set key01:"+key);
-        if(ssdb.isConnected()){
+        System.out.println("isConnected:"+isConnected);
+        if(isConnected){
              ssdb.set(key, val);
         }else{
             key = set(val);//如果前面取出的不可用，则再回调重新选一个可写服务器
         }
-        //System.out.println("set key02:"+key);
+        System.out.println("set key02:"+key);
         return key;
     }
 
@@ -343,17 +360,18 @@ public class SSDBClient {
     public byte[] ergodic(byte[] key) throws Exception{
         String str = new String(key);
         byte[] bt=null;
+        System.out.println("readableCluster.size():"+readableCluster.size());
         for(Map.Entry<String, Cluster> entry: readableCluster.entrySet()) {
-            //System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
+            System.out.println("Key = " + entry.getKey() + ", Value = " + entry.getValue());
             Cluster cluster=entry.getValue();
             SSDB ssdb=cluster.getMaster();
-            if(ssdb.isConnected()){
+            if(ssdb.isConnected()&&ssdb.isIdle()){
                 bt=ssdb.get(key);
             }else{
                 ConcurrentHashMap<String, SSDB> readableSlaver=cluster.getSlaver();
                 for(Map.Entry<String, SSDB> ent: readableSlaver.entrySet()) {
                     ssdb=ent.getValue();
-                    if(ssdb.isConnected()) {
+                    if(ssdb.isConnected()&&ssdb.isIdle()) {
                         bt=ssdb.get(key);
                     }
                     if(bt!=null){
@@ -365,6 +383,8 @@ public class SSDBClient {
                 break;
             }
         }
+        //System.out.println("key:"+str);
+        //System.out.println("hex:"+ HexUtil.byte2hex(bt));
         return bt;
     }
     /***
@@ -379,17 +399,18 @@ public class SSDBClient {
         String db=str.substring(0,4);//得到集群编号
         int id=Integer.parseInt(db);
         Cluster cluster=readableCluster.get(String.valueOf(id));
+        //获得可读集群的主SSDB
         SSDB ssdb=cluster.getMaster();
         byte[] bt=null;
-        if(ssdb.isConnected()){
+        if(ssdb.isConnected()&&ssdb.isIdle()){
             bt=ssdb.get(key);
         }else{
             ConcurrentHashMap<String, SSDB> readableSlaver=cluster.getSlaver();
             ssdb=getRandomSlaver(readableSlaver);
-            if(ssdb.isConnected()) {
+            if(ssdb.isConnected()&&ssdb.isIdle()) {
                 bt=ssdb.get(key);
             }else{
-                bt=get(key);//如果主和随机选择的副都没有打开，则重新随机选择一个
+                bt=get(key);//如果主和随机选择的副都没有打开，则再重新随机选择一个
             }
         }
         return bt;
@@ -425,7 +446,7 @@ public class SSDBClient {
         Cluster cluster=getRandomMaster(writableCluster);
         SSDB ssdb=cluster.getMaster();
         Result rs=new Result(cluster.getId(),key);
-        if(ssdb.isConnected()){
+        if(ssdb.isConnected()&&ssdb.isIdle()){
             ssdb.set(key, val);
         }else{
             rs = set(key,val);//如果前面取出的不可用，则再回调重新选一个可写服务器
@@ -443,7 +464,7 @@ public class SSDBClient {
         Cluster cluster=getRandomMaster(writableCluster);
         SSDB ssdb=cluster.getMaster();
         String clusterid=cluster.getId();
-        if(ssdb.isConnected()){
+        if(ssdb.isConnected()&&ssdb.isIdle()){
             ssdb.set(key, val);
         }else{
             clusterid = put(key,val);//如果前面取出的不可用，则再回调重新选一个可写服务器
@@ -462,12 +483,12 @@ public class SSDBClient {
         Cluster cluster=readableCluster.get(String.valueOf(id));
         SSDB ssdb=cluster.getMaster();
         byte[] bt=null;
-        if(ssdb.isConnected()){
+        if(ssdb.isConnected()&&ssdb.isIdle()){
             bt=ssdb.get(key);
         }else{
             ConcurrentHashMap<String, SSDB> readableSlaver=cluster.getSlaver();
             ssdb=getRandomSlaver(readableSlaver);
-            if(ssdb.isConnected()) {
+            if(ssdb.isConnected()&&ssdb.isIdle()) {
                 bt=ssdb.get(key);
             }else{
                 bt=get(key);//如果主和随机选择的副都没有打开，则重新随机选择一个
@@ -487,12 +508,12 @@ public class SSDBClient {
         Cluster cluster=readableCluster.get(clusterid);
         SSDB ssdb=cluster.getMaster();
         byte[] bt=null;
-        if(ssdb.isConnected()){
+        if(ssdb.isConnected()&&ssdb.isIdle()){
             bt=ssdb.get(key);
         }else{
             ConcurrentHashMap<String, SSDB> readableSlaver=cluster.getSlaver();
             ssdb=getRandomSlaver(readableSlaver);
-            if(ssdb.isConnected()) {
+            if(ssdb.isConnected()&&ssdb.isIdle()) {
                 bt=ssdb.get(key);
             }else{
                 bt=get(key);//如果主和随机选择的副都没有打开，则重新随机选择一个
@@ -511,9 +532,11 @@ public class SSDBClient {
         Cluster cluster=readableCluster.get(rs.getClusterid());
         boolean bl=false;
         SSDB ssdb=cluster.getMaster();
-        if(ssdb.isConnected()){
+        if(ssdb.isConnected()&&ssdb.isIdle()){
             ssdb.del(rs.getKey());
             bl=true;
+        }else{
+            del(rs);
         }
         return bl;
     }
@@ -529,9 +552,11 @@ public class SSDBClient {
         Cluster cluster=readableCluster.get(clusterid);
         boolean bl=false;
         SSDB ssdb=cluster.getMaster();
-        if(ssdb.isConnected()){
+        if(ssdb.isConnected()&&ssdb.isIdle()){
             ssdb.del(key);
             bl=true;
+        }else{
+            del(clusterid,key);
         }
         return bl;
     }
@@ -545,6 +570,7 @@ public class SSDBClient {
         release(readableCluster);
         release(writableCluster);
     }
+
     private void release(ConcurrentHashMap<String, Cluster> clusters){
         for(Map.Entry<String, Cluster> entry : clusters.entrySet()){
             String mapKey = entry.getKey();

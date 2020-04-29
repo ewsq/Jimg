@@ -51,14 +51,19 @@ public class SSDB{
 	public void close(){
 		link.close();
 	}
+
 	public void release(){
 		link.release();
 	}
+
 	public boolean isConnected() {
 		return link.isConnected();
 	}
 	public boolean isClosed() {
 		return link.isClosed();
+	}
+	public boolean isIdle() {
+		return link.isIdle();
 	}
 
 	public Response request(String cmd, byte[]...params) throws Exception{

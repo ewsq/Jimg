@@ -13,10 +13,11 @@ public class Link {
 	private MemoryStream input = new MemoryStream();
 	private boolean closed= false; // 是否已关闭的d连接标志位，true表示关闭，false表示连接
 	private boolean check=true;//是否启动连接检查
+	private boolean isIdle=true;//是否空闲
+
 	public Link(){
 		
 	}
-
 	public static void main(String[] args) {
 		try {
 			Link link=new Link("10.239.204.34",15272);
@@ -69,7 +70,7 @@ public class Link {
 		sock.setTcpNoDelay(true);
 		closed=false;
 		//方式1：相当于继承了Thread类，作为子类重写run()实现
-		/*new Thread() {
+		new Thread() {
 			int count=0;
 			public void run() {
 				while (check) {
@@ -94,9 +95,11 @@ public class Link {
 								sock.setTcpNoDelay(true);
 								System.out.println("已连接");
 								closed=false;
+								isIdle=true;
 							} catch (Exception e) {
 								System.out.println("连接异常");
 								closed=true;
+								isIdle=true;
 							}
 						}
 						Thread.sleep(100000);
@@ -105,7 +108,7 @@ public class Link {
 					}
 				}
 			};
-		}.start();*/
+		}.start();
 
 		//方式2:实现Runnable,Runnable作为匿名内部类
 		/*new Thread(new Runnable() {
@@ -141,15 +144,18 @@ public class Link {
 		}
 		return this.request(cmd, list);
 	}
-
+	synchronized void setIdle(boolean isIdle) {
+		this.isIdle=isIdle;
+	}
 	public Response request(String cmd, List<byte[]> params) throws Exception{
+		setIdle(false);
 		MemoryStream buf = new MemoryStream(4096);
 		Integer len = cmd.length();
 		buf.write(len.toString());
 		buf.write('\n');
 		buf.write(cmd);
 		buf.write('\n');
-		for(byte[] bs : params){
+		for (byte[] bs : params) {
 			len = bs.length;
 			buf.write(len.toString());
 			buf.write('\n');
@@ -158,8 +164,11 @@ public class Link {
 		}
 		buf.write('\n');
 		send(buf);
-		
+
 		List<byte[]> list = recv();
+
+		setIdle(true);
+
 		return new Response(list);
 	}
 	
@@ -212,10 +221,11 @@ public class Link {
 		
 		int idx = 0;
 		// ignore leading empty lines
+		// 找出前面的空行，所在位置
 		while(idx < input.size && (input.chatAt(idx) == '\r' || input.chatAt(idx) == '\n')){
 			idx ++;
 		}
-		System.out.println("idx:"+idx);
+		//System.out.println("idx:"+idx);
 
 		while(idx < input.size){
 			int data_idx = input.memchr('\n', idx);
@@ -235,7 +245,7 @@ public class Link {
 			try{
 				size = Integer.parseInt(str, 10);
 			}catch(Exception e){
-				throw new Exception("Parse body_len error");
+				throw new Exception("Parse body_len error Integer.parseInt(str, 10)："+str);
 			}
 			
 			idx = data_idx + size;
@@ -281,6 +291,10 @@ public class Link {
 
 	public boolean isConnected() {
 		return !closed;
+	}
+
+	public boolean isIdle() {
+		return isIdle;
 	}
 
 	public boolean isClosed() {

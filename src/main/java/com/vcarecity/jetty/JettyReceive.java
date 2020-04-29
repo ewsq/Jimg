@@ -2,6 +2,7 @@ package com.vcarecity.jetty;
 
 import com.vcarecity.mode.FileMeta;
 import com.vcarecity.ssdb.SSDBClient;
+import com.vcarecity.ssdb.SSDBNoPoolClient;
 import com.vcarecity.utils.*;
 import net.sf.json.JSONObject;
 import org.apache.commons.io.IOUtils;
@@ -20,6 +21,7 @@ import java.util.*;
 public class JettyReceive extends AbstractHandler {
     Logger log = Logger.getLogger();
     SSDBClient ssdb=new SSDBClient();
+    //SSDBNoPoolClient ssdb=new SSDBNoPoolClient(); //应急用的，由于SSDBClient还没有解决多线程并发，所以暂时使用这种方式
     LinkedList<FileMeta> files = new LinkedList<FileMeta>();
     public int socketTimeout=2500000;
     public int connectionTimeout=5000000;
