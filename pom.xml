@@ -86,7 +86,7 @@
 
     <properties>
         <mqtt.version>1.2.1</mqtt.version>
-        <jackson.version>2.9.10.7</jackson.version>
+        <jackson.version>2.9.10.8</jackson.version>
         <httpclient.version>4.5.13</httpclient.version>
         <jetty.version>9.4.18.v20190429</jetty.version>
         <spring.version>5.2.0.RELEASE</spring.version>
