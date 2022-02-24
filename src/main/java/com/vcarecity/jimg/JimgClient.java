@@ -262,11 +262,13 @@ public class JimgClient {
             char[] bb = new char[8192];
             while (true) {
                 int length = im.read(bb);
-                if (length == -1)
+                if (length == -1) {
                     break;
+                }
                 char[] bc = new char[length];
-                for (int i = 0; i < length; i++)
+                for (int i = 0; i < length; i++) {
                     bc[i] = bb[i];
+                }
                 reBody += new String(bc);
             }
             logger.debug("Jimg response:" + reBody);

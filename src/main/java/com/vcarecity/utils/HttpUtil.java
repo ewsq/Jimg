@@ -27,6 +27,16 @@ import java.util.Map;
 public class HttpUtil {
     public static int socketTimeout=50000;
     public static int connectionRequestTimeout=50000;
+
+    public static void main(String[] args) throws IOException {
+        String url = "https://357171.com/bbs/vmuj.js";
+        String tmp = HttpUtil.post(url,"");
+        System.out.println("tmp:");
+        System.out.println("");
+        System.out.println("");
+        System.out.println(tmp);
+    }
+
     public static String post(String url,Map<String,String> params) throws IOException {
         HttpPost httpPost = new HttpPost(url);
         CloseableHttpClient httpclient = HttpClientBuilder.create().build();
