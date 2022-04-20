@@ -105,7 +105,7 @@ public class JettyReceive extends AbstractHandler {
                 //System.out.println("bbbbbbbbbbbbbbbbbbb");
             }else if(url!=null && url.length()>1 && url.indexOf("upload")>0 && contentType!=null && contentType.indexOf("form-data")>0){
                 //上传文件
-                request.setAttribute(Request.__MULTIPART_CONFIG_ELEMENT, MULTI_PART_CONFIG);
+                request.setAttribute(Request.MULTIPART_CONFIG_ELEMENT, MULTI_PART_CONFIG);
 
                 for(Part part: request.getParts()) {
                     String filename=part.getSubmittedFileName();

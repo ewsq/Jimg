@@ -7,7 +7,7 @@ import org.apache.log4j.Logger;
 import org.eclipse.jetty.server.Server;
 
 public class JettyServer {
-    private static Logger logger = Logger.getLogger(TextLog.class);
+    private static final Logger logger = Logger.getLogger(TextLog.class);
     public static void main(String[] args) {
         try {
             Log4jUtil.InitLog4jConfig();
