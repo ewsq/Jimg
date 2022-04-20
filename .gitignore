@@ -13,6 +13,7 @@
 .mtj.tmp/
 .idea/
 log/
+target/
 logs/
 *.iml
 
